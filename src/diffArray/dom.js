@@ -66,13 +66,25 @@ function diffChildren(newArr, oldArr, parentDom) {
 		// }
 	}
 
+	placeChildren(newArr, oldArr, parentDom);
+
+	// Remove old nodes
+	i = oldArr.length;
+	while (--i >= 0) {
+		if (oldArr[i] != null) {
+			parentDom.removeChild(oldArr[i]._dom);
+		}
+	}
+}
+
+function placeChildren(newArr, oldArr, parentDom) {
 	// Insert new nodes
-	i = newArr.length - 1;
-	j = oldArr.length - 1;
+	let i = newArr.length - 1;
+	let j = oldArr.length - 1;
 	let prevOldChild = null;
 	while (i >= 0) {
-		newChild = newArr[i];
-		oldChild = oldArr[j];
+		let newChild = newArr[i];
+		let oldChild = oldArr[j];
 
 		// TODO: To explore
 		// const insert = newChild => parentDom.insertBefore(
@@ -125,14 +137,6 @@ function diffChildren(newArr, oldArr, parentDom) {
 		//   }
 		//   newChild._refSibling = null;
 		// }
-	}
-
-	// Remove old nodes
-	i = oldArr.length;
-	while (--i >= 0) {
-		if (oldArr[i] != null) {
-			parentDom.removeChild(oldArr[i]._dom);
-		}
 	}
 }
 
