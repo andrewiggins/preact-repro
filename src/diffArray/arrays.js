@@ -1,5 +1,9 @@
 import { isEqual } from "./isEqual";
 
+// ABANDONED!!!!
+// Manually re-implementing DOM ops on arrays wasn't useful
+// Using real dom in dom.js now
+
 const EMPTY_OBJ = {};
 
 // #region Add Node methods to Array
@@ -138,7 +142,7 @@ function diffArrays(newArr, oldArr, result) {
 const wrap = arr => arr.map(key => ({ key }));
 const unwrap = arr => arr.map(obj => obj.key);
 function run(oldArr, newArr, label) {
-	console.log(label);
+	console.group(label);
 
 	oldArr = wrap(oldArr);
 	newArr = wrap(newArr);
@@ -150,26 +154,31 @@ function run(oldArr, newArr, label) {
 	actual = unwrap(actual);
 	expected = unwrap(expected);
 	console.log(isEqual(actual, expected), actual, expected);
-	// console.log();
+	console.groupEnd();
 }
 
-// no diff
 run([0, 1, 2], [0, 1, 2], "No diff:");
 
-// append
 run([0, 1], [0, 1, 2], "Append:");
+run([0, 1, 2], [0, 1], "Remove from end:");
 
-// insert
-run([0, 2], [0, 1, 2], "Insert:");
-
-// prepend
 run([1, 2], [0, 1, 2], "Prepend:");
+run([0, 1, 2], [1, 2], "Remove from beginning:");
 
-// remove
-run([0, 1, 2], [0, 2], "Remove:");
+run([0, 2], [0, 1, 2], "Insert in middle:");
+run([0, 1, 2], [0, 2], "Remove from middle:");
 
-// move forward
-run([0, 1, 2, 3], [1, 2, 0, 3], "Move forward:");
+run([0, 1], [1, 0], "Swap:");
 
-// move backward
-run([0, 1, 2, 3], [1, 2, 0, 3], "Move backward:");
+run([0, 1, 2, 3], [0, 2, 1, 3], "Swap in middle (forward):");
+run([0, 2, 1, 3], [0, 1, 2, 3], "Swap in middle (backward):");
+
+run([0, 1, 2, 3], [1, 2, 3, 0], "Move to end");
+run([1, 2, 3, 0], [0, 1, 2, 3], "Move to beginning");
+
+run([0, 1, 2, 3], [3, 2, 1, 0], "Reverse");
+
+run([0, 1, 2, 3], [1, 2, 0, 3], "Jump forward:");
+run([1, 2, 0, 3], [0, 1, 2, 3], "Jump backward:");
+
+run([5, 8, 3, 2, 4, 0, 7, 6, 1, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "Wild!");

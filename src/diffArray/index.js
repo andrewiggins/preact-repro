@@ -1,2 +1,2 @@
-// import "./array.js";
+// import "./arrays.js";
 import "./dom.js";
