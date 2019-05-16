@@ -1,7 +1,5 @@
 import { isEqual } from "./isEqual";
-
-// #region Setup
-let shouldLog = false;
+import { startLogging, stopLogging } from "./logCall";
 
 /**
  * @param {number[]} array
@@ -21,30 +19,6 @@ function generateHtml(array) {
 
 	return [vnodes, parent];
 }
-
-/**
- * Modify obj's original method to log calls and arguments on logger object
- * @template T
- * @param {T} obj
- * @param {keyof T} method
- */
-function logCall(obj, method) {
-	const original = obj[method];
-	obj[method] = function(...args) {
-		original.apply(this, args);
-
-		if (shouldLog) {
-			args = args.map(arg => (arg instanceof Text ? arg.data : arg));
-			console.log(method, ...args);
-		}
-	};
-}
-
-logCall(Node.prototype, "appendChild");
-logCall(Node.prototype, "insertBefore");
-logCall(Node.prototype, "replaceChild");
-logCall(Node.prototype, "removeChild");
-// #endregion
 
 function diff(oldChild, newChild) {
 	if (oldChild) {
@@ -172,9 +146,9 @@ function run(oldArr, newArr, label) {
 
 	const original = parentDom.textContent;
 
-	shouldLog = true;
+	startLogging();
 	diffChildren(newVNodes, oldVNodes, parentDom);
-	shouldLog = false;
+	stopLogging();
 
 	const actual = parentDom.textContent;
 	const expected = newArr.join("");
