@@ -1,2 +1,3 @@
-// import "./arrays.js";
-import "./dom.js";
+// import "./arrays";
+// import "./dom";
+import "./preact";
