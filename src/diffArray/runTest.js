@@ -50,6 +50,9 @@ export function runTests(diffChildren) {
 	run([0, 1, 2, 3, 4, 5], [0, 2, 3, 4, 1, 5], "Jump forward:");
 	run([0, 2, 3, 4, 1, 5], [0, 1, 2, 3, 4, 5], "Jump backward:");
 
+	run([0, 1, 2, 3, 4, 5], [2, 0, 4, 1, 5, 3], "Multiple jump forward:");
+	run([2, 0, 4, 1, 5, 3], [0, 1, 2, 3, 4, 5], "Multiple jump backward:");
+
 	run(
 		[5, 8, 3, 2, 4, 0, 6, 7, 1, 9],
 		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
