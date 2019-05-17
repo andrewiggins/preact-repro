@@ -92,10 +92,9 @@ function placeChildren(newArr, oldArr, parentDom) {
 			parentDom.insertBefore(newChild._dom, refNode);
 			i--;
 
-			// TODO: This is probably required for some missing test case...
-			// if (newChild._oldIndex != null) {
-			// 	oldArr[newChild._oldIndex] = null;
-			// }
+			if (newChild._oldIndex != null) {
+				oldArr[newChild._oldIndex] = null;
+			}
 		} else if (oldChild == null) {
 			j--;
 		} else if (newChild == null) {
@@ -111,7 +110,28 @@ function placeChildren(newArr, oldArr, parentDom) {
 
 				prevOldChild = oldChild;
 				// oldArr[j] = null;
+			} else if (oldChild._newIndex < newChild._oldIndex) {
+				console.log(
+					"oldChild._newIndex:",
+					oldChild._newIndex,
+					"newChild._oldIndex:",
+					newChild._oldIndex,
+					oldChild._newIndex < newChild._oldIndex
+				);
+				console.log(oldChild.key, prevOldChild && prevOldChild.key);
+
+				j--;
+				prevOldChild = oldChild;
+				continue;
 			} else {
+				// console.log(
+				// 	"oldChild._newIndex:",
+				// 	oldChild._newIndex,
+				// 	"newChild._oldIndex:",
+				// 	newChild._oldIndex,
+				// 	oldChild._newIndex < newChild._oldIndex
+				// );
+
 				let refNode = prevOldChild ? prevOldChild._dom : null;
 				parentDom.insertBefore(newChild._dom, refNode);
 				i--;
