@@ -1,20 +1,20 @@
 import { startLogging, stopLogging } from "./logCall";
 import { isEqual } from "./isEqual";
 
+const parentKey = "parent";
+
 export function runTests(diffChildren) {
 	const results = [];
-	const toVNodes = arr => arr.map(key => ({ key }));
-	const toKeys = arr => arr.map(obj => obj.key);
 	function run(oldArr, newArr, label) {
 		console.group(label);
 
-		const [oldVNodes, parentDom] = generateHtml(oldArr);
-		const newVNodes = toVNodes(newArr);
+		const [oldVNode, parentDom] = generateHtml(oldArr);
+		const newVNode = { key: parentKey, _children: newArr.map(coerceToVNode) };
 
 		const original = parentDom.textContent;
 
 		startLogging();
-		diffChildren(newVNodes, oldVNodes, parentDom);
+		diffChildren(newVNode, oldVNode, parentDom);
 		stopLogging();
 
 		const actual = parentDom.textContent;
@@ -64,8 +64,35 @@ export function runTests(diffChildren) {
 }
 
 /**
+ * Coerce an untrusted value into a VNode
+ * Specifically, this should be used anywhere a user could provide a boolean, string, or number where
+ * a VNode or Component is desired instead
+ * @param {boolean | string | number | import('./internal').VNode} possibleVNode A possible VNode
+ * @returns {import('./internal').VNode | null}
+ */
+export function coerceToVNode(possibleVNode) {
+	if (possibleVNode == null || typeof possibleVNode === "boolean") return null;
+	if (typeof possibleVNode === "string" || typeof possibleVNode === "number") {
+		return { key: possibleVNode };
+	}
+
+	// if (Array.isArray(possibleVNode)) {
+	// 	return createElement(Fragment, null, possibleVNode);
+	// }
+
+	// // Clone vnode if it has already been used. ceviche/#57
+	// if (possibleVNode._dom!=null || possibleVNode._component!=null) {
+	// 	let vnode = createVNode(possibleVNode.type, possibleVNode.props, possibleVNode.key, null);
+	// 	vnode._dom = possibleVNode._dom;
+	// 	return vnode;
+	// }
+
+	return possibleVNode;
+}
+
+/**
  * @param {number[]} array
- * @returns {[any[], Node]}
+ * @returns {[import('./internal').VNode, Node]}
  */
 function generateHtml(array) {
 	let parent = document.createElement("div");
@@ -79,5 +106,5 @@ function generateHtml(array) {
 		vnodes.push({ key: value, _dom: dom });
 	}
 
-	return [vnodes, parent];
+	return [{ key: parentKey, _children: vnodes }, parent];
 }

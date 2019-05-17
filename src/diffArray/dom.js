@@ -8,8 +8,11 @@ function diff(oldChild, newChild) {
 	}
 }
 
-function diffChildren(newArr, oldArr, parentDom) {
+function diffChildren(newVNode, oldVNode, parentDom) {
 	// algorithm assumes oldArr matches result
+
+	const newArr = newVNode._children;
+	const oldArr = oldVNode._children;
 
 	let i, j, newChild, oldChild;
 
