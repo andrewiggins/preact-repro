@@ -75,6 +75,7 @@ function placeChildren(newArr, oldArr, parentDom) {
 			parentDom.insertBefore(newChild._dom, refNode);
 			i--;
 
+			prevOldChild = newChild;
 			if (newChild._oldIndex != null) {
 				oldArr[newChild._oldIndex] = null;
 			}

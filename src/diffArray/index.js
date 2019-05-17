@@ -1,3 +1,3 @@
 // import "./arrays";
-// import "./dom";
-import "./preact";
+import "./dom";
+// import "./preact";
