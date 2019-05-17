@@ -140,6 +140,7 @@ function placeChildren(newArr, oldArr, parentDom) {
 	}
 }
 
+const results = [];
 const toVNodes = arr => arr.map(key => ({ key }));
 const toKeys = arr => arr.map(obj => obj.key);
 function run(oldArr, newArr, label) {
@@ -156,8 +157,11 @@ function run(oldArr, newArr, label) {
 
 	const actual = parentDom.textContent;
 	const expected = newArr.join("");
-	console.log(isEqual(actual, expected), `${original} => ${actual}`, expected);
+	const result = isEqual(actual, expected);
+	console.log(result, `${original} => ${actual}`, expected);
 	console.groupEnd();
+
+	results.push(result);
 }
 
 run([0, 1, 2], [0, 1, 2], "No diff:");
@@ -183,3 +187,10 @@ run([0, 1, 2, 3], [3, 2, 1, 0], "Reverse");
 
 run([0, 1, 2, 3], [1, 2, 0, 3], "Jump forward:");
 run([1, 2, 0, 3], [0, 1, 2, 3], "Jump backward:");
+
+run([5, 8, 3, 2, 4, 0, 6, 7, 1, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "Wild!");
+
+console.log(
+	"Failed:",
+	results.reduce((sum, didSucceed) => (didSucceed ? sum : sum + 1), 0)
+);
