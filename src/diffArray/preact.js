@@ -24,7 +24,7 @@ function diff(parentDom, childVNode, oldVNode, oldDom) {
 
 // Largely inspired by Preact's current algorithm
 export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
-	let childVNode, i, j, oldVNode, newDom, sibDom;
+	let newVNode, i, j, oldVNode, newDom, sibDom;
 
 	let newChildren = newParentVNode._children // || toChildArray(newParentVNode.props.children, newParentVNode._children=[], coerceToVNode, true);
 	// This is a compression of oldParentVNode!=null && oldParentVNode != EMPTY_OBJ && oldParentVNode._children || EMPTY_ARR
@@ -45,16 +45,16 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) 
 	}
 
 	for (i=0; i<newChildren.length; i++) {
-		childVNode = newChildren[i] = coerceToVNode(newChildren[i]);
+		newVNode = newChildren[i] = coerceToVNode(newChildren[i]);
 
-		if (childVNode!=null) {
+		if (newVNode!=null) {
 			// Check if we find a corresponding element in oldChildren.
 			// If found, delete the array item by setting to `undefined`.
 			// We use `undefined`, as `null` is reserved for empty placeholders
 			// (holes).
 			oldVNode = oldChildren[i];
 
-			if (oldVNode===null || (oldVNode && (oldVNode.key!=null ? (childVNode.key === oldVNode.key) : (childVNode.key==null && childVNode.type === oldVNode.type)))) {
+			if (oldVNode===null || (oldVNode && (oldVNode.key!=null ? (newVNode.key === oldVNode.key) : (newVNode.key==null && newVNode.type === oldVNode.type)))) {
 				oldChildren[i] = undefined;
 			}
 			else {
@@ -62,7 +62,7 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) 
 				// so after this loop oldVNode == null or oldVNode is a valid value.
 				for (j=0; j<oldChildrenLength; j++) {
 					oldVNode = oldChildren[j];
-					if (oldVNode && (oldVNode.key!=null ? (childVNode.key === oldVNode.key) : (childVNode.key==null && childVNode.type === oldVNode.type))) {
+					if (oldVNode && (oldVNode.key!=null ? (newVNode.key === oldVNode.key) : (newVNode.key==null && newVNode.type === oldVNode.type))) {
 						oldChildren[j] = undefined;
 						break;
 					}
@@ -71,15 +71,15 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) 
 			}
 
 			// Morph the old element into the new one, but don't append it to the dom yet
-			newDom = diff(parentDom, childVNode, oldVNode, oldDom);
+			newDom = diff(parentDom, newVNode, oldVNode, oldDom);
 
 			// Only proceed if the vnode has not been unmounted by `diff()` above.
 			if (newDom!=null) {
-				if (childVNode._lastDomChild != null) {
+				if (newVNode._lastDomChild != null) {
 					// Only Fragments or components that return Fragment like VNodes will
 					// have a non-null _lastDomChild. Continue the diff from the end of
 					// this Fragment's DOM tree.
-					newDom = childVNode._lastDomChild;
+					newDom = newVNode._lastDomChild;
 				}
 				// else if (excessDomChildren==oldVNode || newDom!=oldDom || newDom.parentNode==null) {
 				else if (oldVNode == null || newDom!=oldDom || newDom.parentNode==null) {

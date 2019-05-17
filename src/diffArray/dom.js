@@ -1,44 +1,47 @@
 import { runTests } from "./runTest";
 
-function diff(oldChild, newChild) {
-	if (oldChild) {
-		newChild._dom = oldChild._dom;
+function diff(oldVNode, newVNode) {
+	if (oldVNode) {
+		newVNode._dom = oldVNode._dom;
 	} else {
-		newChild._dom = document.createTextNode(newChild.key);
+		newVNode._dom = document.createTextNode(newVNode.key);
 	}
 }
 
-function diffChildren(newVNode, oldVNode, parentDom) {
+function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 	// algorithm assumes oldArr matches result
 
-	const newArr = newVNode._children;
-	const oldArr = oldVNode._children;
+	const newChildren = newParentVNode._children;
+	const oldChildren = oldParentVNode._children;
 
-	let i, j, newChild, oldChild;
+	let i, j, newVNode, oldVNode;
 
 	// Find matching old nodes
-	for (i = 0; i < newArr.length; i++) {
-		newChild = newArr[i];
-		oldChild = oldArr[i];
+	for (i = 0; i < newChildren.length; i++) {
+		newVNode = newChildren[i];
 
-		if (oldChild && oldChild.key === newChild.key) {
-			// oldArr[i] = undefined;
-			newChild._oldIndex = i;
-			oldChild._newIndex = i;
-		} else {
-			for (j = 0; j < oldArr.length; j++) {
-				oldChild = oldArr[j];
-				if (oldChild && newChild.key === oldChild.key) {
-					// oldArr[j] = undefined;
-					newChild._oldIndex = j;
-					oldChild._newIndex = i;
-					break;
+		if (newVNode != null) {
+			oldVNode = oldChildren[i];
+
+			if (oldVNode && oldVNode.key === newVNode.key) {
+				// oldArr[i] = undefined;
+				newVNode._oldIndex = i;
+				oldVNode._newIndex = i;
+			} else {
+				for (j = 0; j < oldChildren.length; j++) {
+					oldVNode = oldChildren[j];
+					if (oldVNode && newVNode.key === oldVNode.key) {
+						// oldArr[j] = undefined;
+						newVNode._oldIndex = j;
+						oldVNode._newIndex = i;
+						break;
+					}
+					oldVNode = null;
 				}
-				oldChild = null;
 			}
-		}
 
-		diff(oldChild, newChild);
+			diff(oldVNode, newVNode);
+		}
 
 		// if (oldChild == null) {
 		//   if (i >= oldArr.length) {
@@ -49,25 +52,25 @@ function diffChildren(newVNode, oldVNode, parentDom) {
 		// }
 	}
 
-	placeChildren(newArr, oldArr, parentDom);
+	placeChildren(newChildren, oldChildren, parentDom);
 
 	// Remove old nodes
-	i = oldArr.length;
+	i = oldChildren.length;
 	while (--i >= 0) {
-		if (oldArr[i] != null) {
-			parentDom.removeChild(oldArr[i]._dom);
+		if (oldChildren[i] != null) {
+			parentDom.removeChild(oldChildren[i]._dom);
 		}
 	}
 }
 
-function placeChildren(newArr, oldArr, parentDom) {
+function placeChildren(newChildren, oldChildren, parentDom) {
 	// Insert new nodes
-	let i = newArr.length - 1;
-	let j = oldArr.length - 1;
+	let i = newChildren.length - 1;
+	let j = oldChildren.length - 1;
 	let prevOldChild = null;
 	while (i >= 0) {
-		let newChild = newArr[i];
-		let oldChild = oldArr[j];
+		let newChild = newChildren[i];
+		let oldChild = oldChildren[j];
 
 		if (j < 0) {
 			// No more old children so just insert new children
@@ -77,7 +80,7 @@ function placeChildren(newArr, oldArr, parentDom) {
 
 			prevOldChild = newChild;
 			if (newChild._oldIndex != null) {
-				oldArr[newChild._oldIndex] = null;
+				oldChildren[newChild._oldIndex] = null;
 			}
 		} else if (oldChild == null) {
 			j--;
@@ -95,14 +98,14 @@ function placeChildren(newArr, oldArr, parentDom) {
 				prevOldChild = oldChild;
 				// oldArr[j] = null;
 			} else if (oldChild._newIndex < newChild._oldIndex) {
-				console.log(
-					"oldChild._newIndex:",
-					oldChild._newIndex,
-					"newChild._oldIndex:",
-					newChild._oldIndex,
-					oldChild._newIndex < newChild._oldIndex
-				);
-				console.log(oldChild.key, prevOldChild && prevOldChild.key);
+				// console.log(
+				// 	"oldChild._newIndex:",
+				// 	oldChild._newIndex,
+				// 	"newChild._oldIndex:",
+				// 	newChild._oldIndex,
+				// 	oldChild._newIndex < newChild._oldIndex
+				// );
+				// console.log(oldChild.key, prevOldChild && prevOldChild.key);
 
 				j--;
 				prevOldChild = oldChild;
@@ -122,7 +125,7 @@ function placeChildren(newArr, oldArr, parentDom) {
 			}
 
 			if (newChild._oldIndex != null) {
-				oldArr[newChild._oldIndex] = null;
+				oldChildren[newChild._oldIndex] = null;
 			}
 		}
 
