@@ -86,30 +86,26 @@ function placeChildren(newArr, oldArr, parentDom) {
 		let newChild = newArr[i];
 		let oldChild = oldArr[j];
 
-		// TODO: To explore
-		// const insert = newChild => parentDom.insertBefore(
-		// 	newChild._dom,
-		// 	prevOldChild && prevOldChild._dom
-		// ), i--;
-		//
-		// if (j==0) { insert(); }
-		// else if (oldChild == null) { j--; }
-		// else if (newChild == null) { i--; }
-		// else if (...) {...}
-		//
-		// Maybe try making the insert() case the final else case
+		if (j < 0) {
+			// No more old children so just insert new children
+			let refNode = prevOldChild ? prevOldChild._dom : null;
+			parentDom.insertBefore(newChild._dom, refNode);
+			i--;
 
-		if (j >= 0 && oldChild == null) {
-			// Skip over null old children if there are more in the list
+			// TODO: This is probably required for some missing test case...
+			// if (newChild._oldIndex != null) {
+			// 	oldArr[newChild._oldIndex] = null;
+			// }
+		} else if (oldChild == null) {
 			j--;
-		} else if (oldChild && oldChild._newIndex == null) {
+		} else if (newChild == null) {
+			i--;
+		} else if (oldChild._newIndex == null) {
 			// Skip over old children that don't have a match in new children (they will be removed)
 			prevOldChild = oldChild;
 			j--;
-		} else if (newChild) {
-			// Skip over null new children
-
-			if (oldChild && newChild.key == oldChild.key) {
+		} else {
+			if (newChild.key == oldChild.key) {
 				i--;
 				j--;
 
@@ -124,8 +120,6 @@ function placeChildren(newArr, oldArr, parentDom) {
 			if (newChild._oldIndex != null) {
 				oldArr[newChild._oldIndex] = null;
 			}
-		} else {
-			i--;
 		}
 
 		// let refNode = newChild._refSibling;
