@@ -1,13 +1,17 @@
 import { startLogging, stopLogging } from "./logCall";
 import { isEqual } from "./isEqual";
 
+const sumResults = array =>
+	array.reduce((sum, didSucceed) => (didSucceed ? sum : sum + 1), 0);
+
 const parentKey = "parent";
 
 /**
  * @param {(newVNode: import('./internal').VNode, oldVNode: import('./internal').VNode, parentDom: Node) => void} diffChildren
  */
 export function runTests(diffChildren) {
-	const results = [];
+	const correctnessResults = [];
+	const opCountResults = [];
 
 	/**
 	 * @param {number[]} oldArr
@@ -37,7 +41,8 @@ export function runTests(diffChildren) {
 
 		console.groupEnd();
 
-		results.push(result && opCountResult);
+		correctnessResults.push(result);
+		opCountResults.push(opCountResult);
 	}
 
 	run([0, 1, 2], [0, 1, 2], "No diff:", 0);
@@ -61,8 +66,18 @@ export function runTests(diffChildren) {
 
 	run([0, 1, 2, 3], [3, 2, 1, 0], "Reverse", 3);
 
-	run([0, 1, 2, 3, 4, 5, 6, 7], [0, 1, 3, 4, 5, 6, 2, 7], "Single jump forward:", 1);
-	run([0, 1, 3, 4, 5, 6, 2, 7], [0, 1, 2, 3, 4, 5, 6, 7], "Single jump backward:", 4);
+	run(
+		[0, 1, 2, 3, 4, 5, 6, 7],
+		[0, 1, 3, 4, 5, 6, 2, 7],
+		"Single jump forward:",
+		1
+	);
+	run(
+		[0, 1, 3, 4, 5, 6, 2, 7],
+		[0, 1, 2, 3, 4, 5, 6, 7],
+		"Single jump backward:",
+		4
+	);
 
 	run([0, 1, 2, 3, 4, 5], [2, 0, 4, 1, 5, 3], "Multiple jump forward:", 3);
 	run([2, 0, 4, 1, 5, 3], [0, 1, 2, 3, 4, 5], "Multiple jump backward:", 3);
@@ -80,10 +95,8 @@ export function runTests(diffChildren) {
 		8
 	);
 
-	console.log(
-		"Failed:",
-		results.reduce((sum, didSucceed) => (didSucceed ? sum : sum + 1), 0)
-	);
+	console.log("Correctness Failed:", sumResults(correctnessResults));
+	console.log("Op Count Failed:", sumResults(opCountResults));
 }
 
 /**
