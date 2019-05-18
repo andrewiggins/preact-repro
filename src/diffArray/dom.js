@@ -52,17 +52,23 @@ function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 		// }
 	}
 
-	placeChildren(newChildren, oldChildren, parentDom);
+	placeChildren2(newChildren, oldChildren, parentDom);
 
 	// Remove old nodes
 	i = oldChildren.length;
 	while (--i >= 0) {
-		if (oldChildren[i] != null) {
+		if (oldChildren[i]._newIndex == null) {
+		// if (oldChildren[i] != null) {
 			parentDom.removeChild(oldChildren[i]._dom);
 		}
 	}
 }
 
+/**
+ * @param {import('./internal').VNode[]} newChildren
+ * @param {import('./internal').VNode[]} oldChildren
+ * @param {Node} parentDom
+ */
 function placeChildren(newChildren, oldChildren, parentDom) {
 	// Insert new nodes
 	let i = newChildren.length - 1;
@@ -138,6 +144,28 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 		//   }
 		//   newChild._refSibling = null;
 		// }
+	}
+}
+
+/**
+ * @param {import('./internal').VNode[]} newChildren
+ * @param {import('./internal').VNode[]} oldChildren
+ * @param {Node} parentDom
+ */
+function placeChildren2(newChildren, oldChildren, parentDom) {
+	let i = newChildren.length - 1;
+	let prevOldDom = null;
+
+	while (i >= 0) {
+		let newVNode = newChildren[i];
+		let oldVNode = newVNode._oldIndex != null ? oldChildren[newVNode._oldIndex] : null;
+
+		if (oldVNode == null || newVNode._oldIndex != i) {
+			parentDom.insertBefore(newVNode._dom, prevOldDom);
+		}
+
+		prevOldDom = newVNode._dom;
+		i--;
 	}
 }
 
