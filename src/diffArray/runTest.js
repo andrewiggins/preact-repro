@@ -5,7 +5,14 @@ const parentKey = "parent";
 
 export function runTests(diffChildren) {
 	const results = [];
-	function run(oldArr, newArr, label) {
+
+	/**
+	 * @param {number[]} oldArr
+	 * @param {number[]} newArr
+	 * @param {string} label
+	 * @param {number} expectedOpCount
+	 */
+	function run(oldArr, newArr, label, expectedOpCount) {
 		console.group(label);
 
 		const [oldVNode, parentDom] = generateHtml(oldArr);
@@ -15,53 +22,59 @@ export function runTests(diffChildren) {
 
 		startLogging();
 		diffChildren(newVNode, oldVNode, parentDom);
-		stopLogging();
+		const actualOpCount = stopLogging().length;
 
 		const actual = parentDom.textContent;
 		const expected = newArr.join("");
 		const result = isEqual(actual, expected);
 		console.log(result, `${original} => ${actual}`, expected);
+
+		const opCountResult = actualOpCount <= expectedOpCount;
+		console.log(opCountResult, actualOpCount, "<=", expectedOpCount);
+
 		console.groupEnd();
 
-		results.push(result);
+		results.push(result && opCountResult);
 	}
 
-	run([0, 1, 2], [0, 1, 2], "No diff:");
+	run([0, 1, 2], [0, 1, 2], "No diff:", 0);
 
-	run([0, 1], [0, 1, 2], "Append:");
-	run([0, 1, 2], [0, 1], "Remove from end:");
+	run([0, 1], [0, 1, 2], "Append:", 1);
+	run([0, 1, 2], [0, 1], "Remove from end:", 1);
 
-	run([1, 2], [0, 1, 2], "Prepend:");
-	run([0, 1, 2], [1, 2], "Remove from beginning:");
+	run([1, 2], [0, 1, 2], "Prepend:", 1);
+	run([0, 1, 2], [1, 2], "Remove from beginning:", 1);
 
-	run([0, 2], [0, 1, 2], "Insert in middle:");
-	run([0, 1, 2], [0, 2], "Remove from middle:");
+	run([0, 2], [0, 1, 2], "Insert in middle:", 1);
+	run([0, 1, 2], [0, 2], "Remove from middle:", 1);
 
-	run([0, 1], [1, 0], "Swap:");
+	run([0, 1], [1, 0], "Swap:", 1);
 
-	run([0, 1, 2, 3], [0, 2, 1, 3], "Swap in middle (forward):");
-	run([0, 2, 1, 3], [0, 1, 2, 3], "Swap in middle (backward):");
+	run([0, 1, 2, 3], [0, 2, 1, 3], "Swap in middle (forward):", 1);
+	run([0, 2, 1, 3], [0, 1, 2, 3], "Swap in middle (backward):", 1);
 
-	run([0, 1, 2, 3], [1, 2, 3, 0], "Move to end");
-	run([1, 2, 3, 0], [0, 1, 2, 3], "Move to beginning");
+	run([0, 1, 2, 3], [1, 2, 3, 0], "Move to end", 1);
+	run([1, 2, 3, 0], [0, 1, 2, 3], "Move to beginning", 1);
 
-	run([0, 1, 2, 3], [3, 2, 1, 0], "Reverse");
+	run([0, 1, 2, 3], [3, 2, 1, 0], "Reverse", 3);
 
-	run([0, 1, 2, 3, 4, 5], [0, 2, 3, 4, 1, 5], "Jump forward:");
-	run([0, 2, 3, 4, 1, 5], [0, 1, 2, 3, 4, 5], "Jump backward:");
+	run([0, 1, 2, 3, 4, 5], [0, 2, 3, 4, 1, 5], "Jump forward:", 1);
+	run([0, 2, 3, 4, 1, 5], [0, 1, 2, 3, 4, 5], "Jump backward:", 3);
 
-	run([0, 1, 2, 3, 4, 5], [2, 0, 4, 1, 5, 3], "Multiple jump forward:");
-	run([2, 0, 4, 1, 5, 3], [0, 1, 2, 3, 4, 5], "Multiple jump backward:");
+	run([0, 1, 2, 3, 4, 5], [2, 0, 4, 1, 5, 3], "Multiple jump forward:", 3);
+	run([2, 0, 4, 1, 5, 3], [0, 1, 2, 3, 4, 5], "Multiple jump backward:", 3);
 
 	run(
 		[5, 8, 3, 2, 4, 0, 6, 7, 1, 9],
 		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-		"Wild! movement"
+		"Wild! movement",
+		7
 	);
 	run(
 		[5, 8, 3, 2, 4, 0, 6, 7, 1],
 		[0, 1, 2, 3, 5, 6, 7, 8, 9],
-		"Wild! movement, addition, removal"
+		"Wild! movement, addition, removal",
+		8
 	);
 
 	console.log(

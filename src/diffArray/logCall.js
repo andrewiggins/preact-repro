@@ -1,12 +1,15 @@
 let shouldLog = false;
+let log = [];
 
 export function startLogging() {
 	initDomLogging();
+	log = [];
 	shouldLog = true;
 }
 
 export function stopLogging() {
 	shouldLog = false;
+	return log;
 }
 
 /**
@@ -22,6 +25,7 @@ function logCall(obj, method) {
 
 		if (shouldLog) {
 			args = args.map(arg => (arg instanceof Text ? arg.data : arg));
+			log.push([method, ...args]);
 			console.log(method, ...args);
 		}
 	};
