@@ -52,13 +52,13 @@ function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 		// }
 	}
 
-	placeChildren2(newChildren, oldChildren, parentDom);
+	placeChildren(newChildren, oldChildren, parentDom);
 
 	// Remove old nodes
 	i = oldChildren.length;
 	while (--i >= 0) {
-		if (oldChildren[i]._newIndex == null) {
-		// if (oldChildren[i] != null) {
+		// if (oldChildren[i]._newIndex == null) {
+		if (oldChildren[i] != null) {
 			parentDom.removeChild(oldChildren[i]._dom);
 		}
 	}
@@ -128,6 +128,8 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 				let refNode = prevOldChild ? prevOldChild._dom : null;
 				parentDom.insertBefore(newChild._dom, refNode);
 				i--;
+
+				prevOldChild = newChild;
 			}
 
 			if (newChild._oldIndex != null) {
