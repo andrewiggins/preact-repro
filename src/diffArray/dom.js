@@ -105,42 +105,40 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			// Skip over old children that don't have a match in new children (they will be removed)
 			prevOldChild = oldChild;
 			j--;
-		} else {
-			if (newChild.key == oldChild.key) {
-				i--;
-				j--;
+		} else if (newChild.key == oldChild.key) {
+			i--;
+			j--;
 
-				prevOldChild = oldChild;
-				// oldArr[j] = null;
-			} else if (oldChild._newIndex < newChild._oldIndex) {
-				// console.log(
-				// 	"oldChild._newIndex:",
-				// 	oldChild._newIndex,
-				// 	"newChild._oldIndex:",
-				// 	newChild._oldIndex,
-				// 	oldChild._newIndex < newChild._oldIndex
-				// );
-				// console.log(oldChild.key, prevOldChild && prevOldChild.key);
-
-				j--;
-				prevOldChild = oldChild;
-				continue;
-			} else {
-				// console.log(
-				// 	"oldChild._newIndex:",
-				// 	oldChild._newIndex,
-				// 	"newChild._oldIndex:",
-				// 	newChild._oldIndex,
-				// 	oldChild._newIndex < newChild._oldIndex
-				// );
-
-				let refNode = prevOldChild ? prevOldChild._dom : null;
-				parentDom.insertBefore(newChild._dom, refNode);
-				i--;
-
-				prevOldChild = newChild;
+			prevOldChild = oldChild;
+			if (newChild._oldIndex != null) {
+				oldChildren[newChild._oldIndex] = null;
 			}
+		} else if (oldChild._newIndex < newChild._oldIndex) {
+			// console.log(
+			// 	"oldChild._newIndex:",
+			// 	oldChild._newIndex,
+			// 	"newChild._oldIndex:",
+			// 	newChild._oldIndex,
+			// 	oldChild._newIndex < newChild._oldIndex
+			// );
+			// console.log(oldChild.key, prevOldChild && prevOldChild.key);
 
+			j--;
+			prevOldChild = oldChild;
+		} else {
+			// console.log(
+			// 	"oldChild._newIndex:",
+			// 	oldChild._newIndex,
+			// 	"newChild._oldIndex:",
+			// 	newChild._oldIndex,
+			// 	oldChild._newIndex < newChild._oldIndex
+			// );
+
+			let refNode = prevOldChild ? prevOldChild._dom : null;
+			parentDom.insertBefore(newChild._dom, refNode);
+			i--;
+
+			prevOldChild = newChild;
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
@@ -169,7 +167,8 @@ function placeChildren2(newChildren, oldChildren, parentDom) {
 
 	while (i >= 0) {
 		let newVNode = newChildren[i];
-		let oldVNode = newVNode._oldIndex != null ? oldChildren[newVNode._oldIndex] : null;
+		let oldVNode =
+			newVNode._oldIndex != null ? oldChildren[newVNode._oldIndex] : null;
 
 		if (oldVNode == null || newVNode._oldIndex != i) {
 			parentDom.insertBefore(newVNode._dom, prevOldDom);
