@@ -3,6 +3,9 @@ import { isEqual } from "./isEqual";
 
 const parentKey = "parent";
 
+/**
+ * @param {(newVNode: import('./internal').VNode, oldVNode: import('./internal').VNode, parentDom: Node) => void} diffChildren
+ */
 export function runTests(diffChildren) {
 	const results = [];
 
@@ -58,8 +61,8 @@ export function runTests(diffChildren) {
 
 	run([0, 1, 2, 3], [3, 2, 1, 0], "Reverse", 3);
 
-	run([0, 1, 2, 3, 4, 5], [0, 2, 3, 4, 1, 5], "Jump forward:", 1);
-	run([0, 2, 3, 4, 1, 5], [0, 1, 2, 3, 4, 5], "Jump backward:", 3);
+	run([0, 1, 2, 3, 4, 5], [0, 2, 3, 4, 1, 5], "Single jump forward:", 1);
+	run([0, 2, 3, 4, 1, 5], [0, 1, 2, 3, 4, 5], "Single jump backward:", 3);
 
 	run([0, 1, 2, 3, 4, 5], [2, 0, 4, 1, 5, 3], "Multiple jump forward:", 3);
 	run([2, 0, 4, 1, 5, 3], [0, 1, 2, 3, 4, 5], "Multiple jump backward:", 3);

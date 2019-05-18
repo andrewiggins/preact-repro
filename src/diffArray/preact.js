@@ -3,15 +3,27 @@ import { runTests } from "./runTest";
 const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
 
+/**
+ * @param {import('./internal').VNode} possibleVNode
+ */
 function coerceToVNode(possibleVNode) {
 	// Assume we already have VNodes
 	return possibleVNode;
 }
 
+/**
+ * @param {import('./internal').VNode} vnode
+ */
 function unmount(vnode) {
 	vnode._dom.parentNode.removeChild(vnode._dom);
 }
 
+/**
+ * @param {Node} parentDom
+ * @param {import('./internal').VNode} childVNode
+ * @param {import('./internal').VNode} oldVNode
+ * @param {Node} oldDom
+ */
 function diff(parentDom, childVNode, oldVNode, oldDom) {
 	if (oldVNode) {
 		childVNode._dom = oldVNode._dom;
@@ -22,7 +34,13 @@ function diff(parentDom, childVNode, oldVNode, oldDom) {
 	return childVNode._dom;
 }
 
-// Largely inspired by Preact's current algorithm
+/**
+ * Largely inspired by Preact's current algorithm
+ * @param {Node} parentDom
+ * @param {import('./internal').VNode} newParentVNode
+ * @param {import('./internal').VNode} oldParentVNode
+ * @param {Node} [oldDom]
+ */
 export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 	let newVNode, i, j, oldVNode, newDom, sibDom;
 

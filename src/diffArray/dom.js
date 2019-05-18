@@ -1,5 +1,9 @@
 import { runTests } from "./runTest";
 
+/**
+ * @param {import('./internal').VNode} oldVNode
+ * @param {import('./internal').VNode} newVNode
+ */
 function diff(oldVNode, newVNode) {
 	if (oldVNode) {
 		newVNode._dom = oldVNode._dom;
@@ -8,6 +12,11 @@ function diff(oldVNode, newVNode) {
 	}
 }
 
+/**
+ * @param {import('./internal').VNode} newParentVNode
+ * @param {import('./internal').VNode} oldParentVNode
+ * @param {Node} parentDom
+ */
 function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 	// algorithm assumes oldArr matches result
 
