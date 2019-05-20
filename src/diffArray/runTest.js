@@ -1,8 +1,14 @@
 import { startLogging, stopLogging } from "./logCall";
 import { isEqual } from "./isEqual";
 
-const sumResults = array =>
-	array.reduce((sum, didSucceed) => (didSucceed ? sum : sum + 1), 0);
+const sumFailedResults = array =>
+	array.reduce((sum, didSucceed) => (!didSucceed ? sum + 1 : sum), 0);
+
+const sumFailedDiffs = array =>
+	array.reduce((sum, diff) => (diff > 0 ? sum + 1: sum), 0);
+
+const sumImprovementDiffs = array =>
+	array.reduce((sum, diff) => (diff < 0 ? sum + 1 : sum), 0);
 
 const parentKey = "parent";
 
@@ -11,7 +17,7 @@ const parentKey = "parent";
  */
 export function runTests(diffChildren) {
 	const correctnessResults = [];
-	const opCountResults = [];
+	const opCountDiffs = [];
 
 	/**
 	 * @param {number[]} oldArr
@@ -36,13 +42,13 @@ export function runTests(diffChildren) {
 		const result = isEqual(actual, expected);
 		console.log(result, `${original} => ${actual}`, expected);
 
-		const opCountResult = actualOpCount <= expectedOpCount;
-		console.log(opCountResult, actualOpCount, "<=", expectedOpCount);
+		const opCountDiff = actualOpCount - expectedOpCount;
+		console.log(opCountDiff <= 0, actualOpCount, "<=", expectedOpCount);
 
 		console.groupEnd();
 
 		correctnessResults.push(result);
-		opCountResults.push(opCountResult);
+		opCountDiffs.push(opCountDiff);
 	}
 
 	run([0, 1, 2], [0, 1, 2], "No diff:", 0);
@@ -111,8 +117,9 @@ export function runTests(diffChildren) {
 		8
 	);
 
-	console.log("Correctness Failed:", sumResults(correctnessResults));
-	console.log("Op Count Failed:", sumResults(opCountResults));
+	console.log("Correctness Failed:", sumFailedResults(correctnessResults));
+	console.log("Op Count Failed:", sumFailedDiffs(opCountDiffs));
+	console.log("Op Count Improved:", sumImprovementDiffs(opCountDiffs));
 }
 
 /**
