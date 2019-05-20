@@ -85,6 +85,26 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 		let newChild = newChildren[i];
 		let oldChild = oldChildren[j];
 
+		// oldChild = oldChild == null ? null : oldChild;
+		// console.log(
+		// 	"j",
+		// 	j,
+		// 	"o",
+		// 	oldChild && oldChild.key,
+		// 	"o._nI:",
+		// 	oldChild && oldChild._newIndex,
+		// 	"--",
+		// 	"i",
+		// 	i,
+		// 	"n",
+		// 	newChild && newChild.key,
+		// 	"n._oI:",
+		// 	newChild && newChild._oldIndex,
+		// 	// oldChild._newIndex < newChild._oldIndex,
+		// 	oldChild && oldChild._newIndex - newChild._oldIndex,
+		// 	oldChild && oldChild._newIndex - i
+		// );
+
 		if (j < 0) {
 			// No more old children so just insert new children
 			let refNode = prevOldChild ? prevOldChild._dom : null;
@@ -101,8 +121,8 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			i--;
 		} else if (oldChild._newIndex == null) {
 			// Skip over old children that don't have a match in new children (they will be removed)
-			prevOldChild = oldChild;
 			j--;
+			prevOldChild = oldChild;
 		} else if (newChild.key == oldChild.key) {
 			i--;
 			j--;
@@ -111,15 +131,8 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
-		} else if (oldChild._newIndex < newChild._oldIndex) {
-			// console.log(
-			// 	"oldChild._newIndex:",
-			// 	oldChild._newIndex,
-			// 	"newChild._oldIndex:",
-			// 	newChild._oldIndex,
-			// 	oldChild._newIndex < newChild._oldIndex
-			// );
-			// console.log(oldChild.key, prevOldChild && prevOldChild.key);
+		} else if (i - oldChild._newIndex > newChildren.length / 2) {
+			console.log('skipping', oldChild.key);
 
 			j--;
 			prevOldChild = oldChild;
