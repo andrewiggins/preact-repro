@@ -1,5 +1,3 @@
-import { runTests } from "./runTest";
-
 const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
 
@@ -41,7 +39,7 @@ function diff(parentDom, childVNode, oldVNode, oldDom) {
  * @param {import('./internal').VNode} oldParentVNode
  * @param {Node} [oldDom]
  */
-export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
+function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 	let newVNode, i, j, oldVNode, newDom, sibDom;
 
 	let newChildren = newParentVNode._children // || toChildArray(newParentVNode.props.children, newParentVNode._children=[], coerceToVNode, true);
@@ -131,4 +129,4 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) 
 	for (i=oldChildrenLength; i--; ) if (oldChildren[i]!=null) unmount(oldChildren[i]);
 }
 
-runTests((newVNode, oldVNode, parentDom) => diffChildren(parentDom, newVNode, oldVNode, EMPTY_OBJ));
+export const preactDiffChildren =(newVNode, oldVNode, parentDom) => diffChildren(parentDom, newVNode, oldVNode, EMPTY_OBJ);
