@@ -85,25 +85,27 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 		let newChild = newChildren[i];
 		let oldChild = oldChildren[j];
 
-		// oldChild = oldChild == null ? null : oldChild;
-		// console.log(
-		// 	"j",
-		// 	j,
-		// 	"o",
-		// 	oldChild && oldChild.key,
-		// 	"o._nI:",
-		// 	oldChild && oldChild._newIndex,
-		// 	"--",
-		// 	"i",
-		// 	i,
-		// 	"n",
-		// 	newChild && newChild.key,
-		// 	"n._oI:",
-		// 	newChild && newChild._oldIndex,
-		// 	// oldChild._newIndex < newChild._oldIndex,
-		// 	oldChild && oldChild._newIndex - newChild._oldIndex,
-		// 	oldChild && oldChild._newIndex - i
-		// );
+		oldChild = oldChild == null ? null : oldChild;
+		console.log(
+			"j",
+			j,
+			"o",
+			oldChild && oldChild.key,
+			"o._nI:",
+			oldChild && oldChild._newIndex,
+			"--",
+			"i",
+			i,
+			"n",
+			newChild && newChild.key,
+			"n._oI:",
+			newChild && newChild._oldIndex,
+			"pOC:",
+			prevOldChild && prevOldChild.key,
+			"diff:",
+			oldChild && i - oldChild._newIndex,
+			oldChildren.length / 2
+		);
 
 		if (j < 0) {
 			// No more old children so just insert new children
@@ -132,7 +134,8 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
-		} else if (i - oldChild._newIndex > newChildren.length / 2) {
+		// } else if (i - oldChild._newIndex > newChildren.length / 2) { // Smaller byte size? but more dom ops
+		} else if (i < oldChildren.length && i != oldChildren.length / 2 && i - oldChild._newIndex >= oldChildren.length / 2) {
 			console.log('skipping', oldChild.key);
 
 			j--;

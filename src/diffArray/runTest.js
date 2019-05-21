@@ -53,14 +53,28 @@ export function runTests(diffChildren) {
 
 	run([0, 1, 2], [0, 1, 2], "No diff:", 0);
 
-	run([0, 1], [0, 1, 2], "Append:", 1);
-	run([0, 1, 2], [0, 1], "Remove from end:", 1);
+	run([], [0], "Append 0:", 1);
+	run([0], [0, 1], "Append 1:", 1);
+	run([0, 1], [0, 1, 2], "Append 2:", 1);
+	run([0, 1, 2], [0, 1, 2, 3], "Append 3:", 1);
+
+	run([0], [], "Pop 0:", 1);
+	run([0, 1], [0], "Pop 1:", 1);
+	run([0, 1, 2], [0, 1], "Pop 2:", 1);
+	run([0, 1, 2, 3], [0, 1, 2], "Pop 3:", 1);
 
 	run([1, 2], [0, 1, 2], "Prepend:", 1);
 	run([0, 1, 2], [1, 2], "Remove from beginning:", 1);
 
 	run([0, 2], [0, 1, 2], "Insert in middle:", 1);
+	run([0, 1, 3, 4], [0, 1, 2, 3, 4], "Insert in middle 2:", 1);
+	run([0, 2, 3], [0, 1, 2, 3], "Insert in middle left:", 1);
+	run([0, 1, 3], [0, 1, 2, 3], "Insert in middle right:", 1);
+
 	run([0, 1, 2], [0, 2], "Remove from middle:", 1);
+	run([0, 1, 2, 3, 4], [0, 1, 3, 4], "Remove from middle 2:", 1);
+	run([0, 1, 2, 3], [0, 2, 3], "Remove from middle left:", 1);
+	run([0, 1, 2, 3], [0, 1, 3], "Remove from middle right:", 1);
 
 	run([0, 1], [1, 0], "Swap:", 1);
 
@@ -128,6 +142,12 @@ export function runTests(diffChildren) {
 		[5, 8, 3, 2, 4, 0, 6, 7, 1],
 		[0, 1, 2, 3, 5, 6, 7, 8, 9],
 		"Wild! movement, addition, removal",
+		8
+	);
+	run(
+		[5, 8, 3, 2, 0, 6, 7, 1],
+		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+		"Wild! movement, addition 2",
 		8
 	);
 
