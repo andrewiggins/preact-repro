@@ -1,15 +1,29 @@
-let shouldLog = false;
 let log = [];
+let restores = [];
 
-export function startLogging() {
-	initDomLogging();
-	log = [];
-	shouldLog = true;
+export function startCapturingLogs() {
+	if (restores.length == 0) {
+		restores = [
+			logCall(Node.prototype, "appendChild"),
+			logCall(Node.prototype, "insertBefore"),
+			logCall(Node.prototype, "replaceChild"),
+			logCall(Node.prototype, "removeChild"),
+			logCall(console, "log", false)
+		];
+	}
 }
 
-export function stopLogging() {
-	shouldLog = false;
-	return log;
+export function stopCapturing() {
+	let restore = restores.pop();
+	while (restore != null) {
+		restore();
+		restore = restores.pop();
+	}
+
+	let capturedLog = log;
+	log = [];
+
+	return capturedLog;
 }
 
 /**
@@ -17,27 +31,18 @@ export function stopLogging() {
  * @template T
  * @param {T} obj
  * @param {keyof T} method
+ * @param {boolean} callOriginal
  */
-function logCall(obj, method) {
+function logCall(obj, method, callOriginal = true) {
 	const original = obj[method];
 	obj[method] = function(...args) {
-		original.apply(this, args);
-
-		if (shouldLog) {
-			args = args.map(arg => (arg instanceof Text ? arg.data : arg));
-			log.push([method, ...args]);
-			console.log(method, ...args);
+		if (callOriginal) {
+			original.apply(this, args);
 		}
-	};
-}
 
-let initialized = false;
-export function initDomLogging() {
-	if (!initialized) {
-		logCall(Node.prototype, "appendChild");
-		logCall(Node.prototype, "insertBefore");
-		logCall(Node.prototype, "replaceChild");
-		logCall(Node.prototype, "removeChild");
-		initialized = true;
-	}
+		args = args.map(arg => (arg instanceof Text ? arg.data : arg));
+		log.push([method, ...args]);
+	};
+
+	return () => (obj[method] = original);
 }

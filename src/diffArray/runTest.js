@@ -1,4 +1,4 @@
-import { startLogging, stopLogging } from "./logCall";
+import { startCapturingLogs, stopCapturing } from "./logCall";
 import { isEqual } from "./isEqual";
 
 const sumFailedResults = array =>
@@ -26,25 +26,32 @@ export function runTests(diffChildren) {
 	 * @param {number} expectedOpCount
 	 */
 	function run(oldArr, newArr, label, expectedOpCount) {
-		console.group(label);
-
 		const [oldVNode, parentDom] = generateHtml(oldArr);
 		const newVNode = { key: parentKey, _children: newArr.map(coerceToVNode) };
 
 		const original = parentDom.textContent;
 
-		startLogging();
+		startCapturingLogs();
 		diffChildren(newVNode, oldVNode, parentDom);
-		const actualOpCount = stopLogging().length;
+		const log = stopCapturing();
+		const domOps = log.filter(log => log[0] !== "log");
+		const actualOpCount = domOps.length;
 
 		const actual = parentDom.textContent;
 		const expected = newArr.join("");
 		const result = isEqual(actual, expected);
-		console.log(result, `${original} => ${actual}`, expected);
-
 		const opCountDiff = actualOpCount - expectedOpCount;
-		console.log(opCountDiff <= 0, actualOpCount, "<=", expectedOpCount);
 
+		if (opCountDiff !== 0 || result === false) {
+			console.group(label);
+		}
+		else {
+			console.groupCollapsed(label);
+		}
+
+		log.forEach(args => console.log(...args));
+		console.log(result, `${original} => ${actual}`, expected);
+		console.log(opCountDiff <= 0, actualOpCount, "<=", expectedOpCount);
 		console.groupEnd();
 
 		correctnessResults.push(result);
