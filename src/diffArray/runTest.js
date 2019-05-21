@@ -5,7 +5,7 @@ const sumFailedResults = array =>
 	array.reduce((sum, didSucceed) => (!didSucceed ? sum + 1 : sum), 0);
 
 const sumFailedDiffs = array =>
-	array.reduce((sum, diff) => (diff > 0 ? sum + 1: sum), 0);
+	array.reduce((sum, diff) => (diff > 0 ? sum + 1 : sum), 0);
 
 const sumImprovementDiffs = array =>
 	array.reduce((sum, diff) => (diff < 0 ? sum + 1 : sum), 0);
@@ -112,7 +112,6 @@ export function runTests(diffChildren) {
 		2
 	);
 
-
 	run(
 		[0, 1, 2, 3, 4, 5, 6, 7],
 		[0, 2, 3, 4, 5, 6, 1, 7],
@@ -129,8 +128,18 @@ export function runTests(diffChildren) {
 	run([0, 1, 2, 3, 4, 5], [2, 0, 4, 1, 5, 3], "Multiple jump forward:", 3);
 	run([2, 0, 4, 1, 5, 3], [0, 1, 2, 3, 4, 5], "Multiple jump backward:", 3);
 
-	run([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 9, 7, 1, 8, 2, 3, 4, 6, 5], "Multiple jump forward 2:", 7);
-	run([0, 9, 7, 1, 8, 2, 3, 4, 6, 5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "Multiple jump backward 2:", 4);
+	run(
+		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+		[0, 9, 7, 1, 8, 2, 3, 4, 6, 5],
+		"Multiple jump forward 2:",
+		7
+	);
+	run(
+		[0, 9, 7, 1, 8, 2, 3, 4, 6, 5],
+		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+		"Multiple jump backward 2:",
+		4
+	);
 
 	run(
 		[5, 8, 3, 2, 4, 0, 6, 7, 1, 9],
@@ -150,6 +159,18 @@ export function runTests(diffChildren) {
 		"Wild! movement, addition 2",
 		8
 	);
+
+	run([0], [null], "To null placeholder 0", 1);
+	run([0, 1], [0, null], "To null placeholder end", 1);
+	run([0, 1], [null, 1], "To null placeholder beginning", 1);
+	run([0, 1, 2], [0, null, 2], "To null placeholder middle", 1);
+	run([0, 1, 2], [0, null, 1, 2], "Insert null", 0);
+
+	run([null], [0], "From null placeholder 0", 1);
+	run([0, null], [0, 1], "From null placeholder end", 1);
+	run([null, 1], [0, 1], "From null placeholder beginning", 1);
+	run([0, null, 2], [0, 1, 2], "From null placeholder middle", 1);
+	// run([0, null, 1, 2], [0, 1, 2], "Remove null", 0); // TODO: Weird edge case maybe not worth covering, though maybe unmounting null is worth it?
 
 	console.log("Correctness Failed:", sumFailedResults(correctnessResults));
 	console.log("Op Count Failed:", sumFailedDiffs(opCountDiffs));
@@ -189,14 +210,19 @@ export function coerceToVNode(possibleVNode) {
  */
 function generateHtml(array) {
 	let parent = document.createElement("div");
-	let vnodes = [];
 
+	let vnodes = [];
 	for (let i = 0; i < array.length; i++) {
 		let value = array[i];
-		let dom = document.createTextNode(value.toString());
+		if (value != null) {
+			let dom = document.createTextNode(value.toString());
 
-		parent.appendChild(dom);
-		vnodes.push({ key: value, _dom: dom });
+			parent.appendChild(dom);
+			vnodes.push({ key: value, _dom: dom });
+		}
+		else {
+			vnodes.push(null);
+		}
 	}
 
 	return [{ key: parentKey, _children: vnodes }, parent];

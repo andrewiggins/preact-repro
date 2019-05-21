@@ -80,7 +80,7 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 	// Insert new nodes
 	let i = 0;
 	let j = 0;
-	let nextOldDom = oldChildren[0];
+	let nextOldDom = getNextDom(oldChildren, j);
 	while (i < newChildren.length) {
 		let newChild = newChildren[i];
 		let oldChild = oldChildren[j];
