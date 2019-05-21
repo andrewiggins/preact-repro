@@ -109,9 +109,10 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			// No more old children so just insert new children
 			let refNode = prevOldChild ? prevOldChild._dom : null;
 			parentDom.insertBefore(newChild._dom, refNode);
-			i--;
 
 			prevOldChild = newChild;
+
+			i--;
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
@@ -124,10 +125,10 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			j--;
 			prevOldChild = oldChild;
 		} else if (newChild.key == oldChild.key) {
-			i--;
 			j--;
-
 			prevOldChild = oldChild;
+
+			i--;
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
@@ -147,9 +148,10 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 
 			let refNode = prevOldChild ? prevOldChild._dom : null;
 			parentDom.insertBefore(newChild._dom, refNode);
-			i--;
 
 			prevOldChild = newChild;
+
+			i--;
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
