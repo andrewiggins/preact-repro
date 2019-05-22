@@ -1,35 +1,24 @@
+import { coerceToVNode, unmount } from "./create-element";
+
 const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
 
 /**
- * @param {import('./internal').VNode} possibleVNode
- */
-function coerceToVNode(possibleVNode) {
-	// Assume we already have VNodes
-	return possibleVNode;
-}
-
-/**
- * @param {import('./internal').VNode} vnode
- */
-function unmount(vnode) {
-	vnode._dom.parentNode.removeChild(vnode._dom);
-}
-
-/**
  * @param {Node} parentDom
- * @param {import('./internal').VNode} childVNode
+ * @param {import('./internal').VNode} newVNode
  * @param {import('./internal').VNode} oldVNode
  * @param {Node} oldDom
  */
-function diff(parentDom, childVNode, oldVNode, oldDom) {
+function diff(parentDom, newVNode, oldVNode, oldDom) {
 	if (oldVNode) {
-		childVNode._dom = oldVNode._dom;
+		newVNode._dom = oldVNode._dom;
+	} else if (newVNode.type == null) {
+		newVNode._dom = document.createTextNode(newVNode.props);
 	} else {
-		childVNode._dom = document.createTextNode(childVNode.key);
+		throw new Error(`Unknown type: ${newVNode.type}`);
 	}
 
-	return childVNode._dom;
+	return newVNode._dom;
 }
 
 /**
@@ -42,7 +31,15 @@ function diff(parentDom, childVNode, oldVNode, oldDom) {
 function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 	let newVNode, i, j, oldVNode, newDom, sibDom;
 
-	let newChildren = newParentVNode._children // || toChildArray(newParentVNode.props.children, newParentVNode._children=[], coerceToVNode, true);
+	// let newChildren = newParentVNode._children || toChildArray(newParentVNode.props.children, newParentVNode._children=[], coerceToVNode);
+	const newChildren =
+		newParentVNode._children ||
+		(newParentVNode._children =
+			newParentVNode.props.children == null
+				? EMPTY_ARR
+				: Array.isArray(newParentVNode.props.children)
+				? newParentVNode.props.children
+				: [newParentVNode.props.children]);
 	// This is a compression of oldParentVNode!=null && oldParentVNode != EMPTY_OBJ && oldParentVNode._children || EMPTY_ARR
 	// as EMPTY_OBJ._children should be `undefined`.
 	let oldChildren = (oldParentVNode && oldParentVNode._children) || EMPTY_ARR;
@@ -60,25 +57,36 @@ function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 		}
 	}
 
-	for (i=0; i<newChildren.length; i++) {
+	for (i = 0; i < newChildren.length; i++) {
+		// TODO: Hmmm potentially modifying array given to user (props.children)
 		newVNode = newChildren[i] = coerceToVNode(newChildren[i]);
 
-		if (newVNode!=null) {
+		if (newVNode != null) {
 			// Check if we find a corresponding element in oldChildren.
 			// If found, delete the array item by setting to `undefined`.
 			// We use `undefined`, as `null` is reserved for empty placeholders
 			// (holes).
 			oldVNode = oldChildren[i];
 
-			if (oldVNode===null || (oldVNode && (oldVNode.key!=null ? (newVNode.key === oldVNode.key) : (newVNode.key==null && newVNode.type === oldVNode.type)))) {
+			if (
+				oldVNode === null ||
+				(oldVNode &&
+					(oldVNode.key != null
+						? newVNode.key === oldVNode.key
+						: newVNode.key == null && newVNode.type === oldVNode.type))
+			) {
 				oldChildren[i] = undefined;
-			}
-			else {
+			} else {
 				// Either oldVNode === undefined or oldChildrenLength > 0,
 				// so after this loop oldVNode == null or oldVNode is a valid value.
-				for (j=0; j<oldChildrenLength; j++) {
+				for (j = 0; j < oldChildrenLength; j++) {
 					oldVNode = oldChildren[j];
-					if (oldVNode && (oldVNode.key!=null ? (newVNode.key === oldVNode.key) : (newVNode.key==null && newVNode.type === oldVNode.type))) {
+					if (
+						oldVNode &&
+						(oldVNode.key != null
+							? newVNode.key === oldVNode.key
+							: newVNode.key == null && newVNode.type === oldVNode.type)
+					) {
 						oldChildren[j] = undefined;
 						break;
 					}
@@ -90,7 +98,7 @@ function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 			newDom = diff(parentDom, newVNode, oldVNode, oldDom);
 
 			// Only proceed if the vnode has not been unmounted by `diff()` above.
-			if (newDom!=null) {
+			if (newDom != null) {
 				if (newVNode._lastDomChild != null) {
 					// Only Fragments or components that return Fragment like VNodes will
 					// have a non-null _lastDomChild. Continue the diff from the end of
@@ -98,18 +106,25 @@ function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 					newDom = newVNode._lastDomChild;
 				}
 				// else if (excessDomChildren==oldVNode || newDom!=oldDom || newDom.parentNode==null) {
-				else if (oldVNode == null || newDom!=oldDom || newDom.parentNode==null) {
+				else if (
+					oldVNode == null ||
+					newDom != oldDom ||
+					newDom.parentNode == null
+				) {
 					// NOTE: excessDomChildren==oldVNode above:
 					// This is a compression of excessDomChildren==null && oldVNode==null!
 					// The values only have the same type when `null`.
 
-					outer: if (oldDom==null || oldDom.parentNode!==parentDom) {
+					outer: if (oldDom == null || oldDom.parentNode !== parentDom) {
 						parentDom.appendChild(newDom);
-					}
-					else {
+					} else {
 						// `j<oldChildrenLength; j+=2` is an alternative to `j++<oldChildrenLength/2`
-						for (sibDom=oldDom, j=0; (sibDom=sibDom.nextSibling) && j<oldChildrenLength; j+=2) {
-							if (sibDom==newDom) {
+						for (
+							sibDom = oldDom, j = 0;
+							(sibDom = sibDom.nextSibling) && j < oldChildrenLength;
+							j += 2
+						) {
+							if (sibDom == newDom) {
 								break outer;
 							}
 						}
@@ -126,7 +141,9 @@ function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 	// if (excessDomChildren!=null && newParentVNode.type!==Fragment) for (i=excessDomChildren.length; i--; ) if (excessDomChildren[i]!=null) removeNode(excessDomChildren[i]);
 
 	// Remove remaining oldChildren if there are any.
-	for (i=oldChildrenLength; i--; ) if (oldChildren[i]!=null) unmount(oldChildren[i]);
+	for (i = oldChildrenLength; i--; )
+		if (oldChildren[i] != null) unmount(oldChildren[i]);
 }
 
-export const preactDiffChildren =(newVNode, oldVNode, parentDom) => diffChildren(parentDom, newVNode, oldVNode, EMPTY_OBJ);
+export const preactDiffChildren = (newVNode, oldVNode, parentDom) =>
+	diffChildren(parentDom, newVNode, oldVNode, EMPTY_OBJ);

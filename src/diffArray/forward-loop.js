@@ -1,3 +1,7 @@
+import { unmount, coerceToVNode } from "./create-element";
+
+const EMPTY_ARR = [];
+
 /**
  * @param {import('./internal').VNode} oldVNode
  * @param {import('./internal').VNode} newVNode
@@ -5,8 +9,10 @@
 function diff(oldVNode, newVNode) {
 	if (oldVNode) {
 		newVNode._dom = oldVNode._dom;
+	} else if (newVNode.type == null) {
+		newVNode._dom = document.createTextNode(newVNode.props);
 	} else {
-		newVNode._dom = document.createTextNode(newVNode.key);
+		throw new Error(`Unknown type: ${newVNode.type}`);
 	}
 }
 
@@ -18,14 +24,22 @@ function diff(oldVNode, newVNode) {
 export function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 	// algorithm assumes oldArr matches result
 
-	const newChildren = newParentVNode._children;
-	const oldChildren = oldParentVNode._children;
+	const newChildren =
+		newParentVNode._children ||
+		(newParentVNode._children =
+			newParentVNode.props.children == null
+				? EMPTY_ARR
+				: Array.isArray(newParentVNode.props.children)
+				? newParentVNode.props.children
+				: [newParentVNode.props.children]);
+	const oldChildren = (oldParentVNode && oldParentVNode._children) || EMPTY_ARR;
 
 	let i, j, newVNode, oldVNode;
 
 	// Find matching old nodes
 	for (i = 0; i < newChildren.length; i++) {
-		newVNode = newChildren[i];
+		// TODO: Hmmm potentially modifying array given to user (props.children)
+		newVNode = newChildren[i] = coerceToVNode(newChildren[i]);
 
 		if (newVNode != null) {
 			oldVNode = oldChildren[i];
@@ -66,7 +80,7 @@ export function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 	while (--i >= 0) {
 		// if (oldChildren[i]._newIndex == null) {
 		if (oldChildren[i] != null) {
-			parentDom.removeChild(oldChildren[i]._dom);
+			unmount(oldChildren[i]);
 		}
 	}
 }
@@ -133,11 +147,13 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 			if (newChild._oldIndex != null) {
 				oldChildren[newChild._oldIndex] = null;
 			}
-		} else if (newChild._oldIndex - i > 0 && newChild._oldIndex - i < oldChildren.length / 2) {
+		} else if (
+			newChild._oldIndex - i > 0 &&
+			newChild._oldIndex - i < oldChildren.length / 2
+		) {
 			console.log("skipping", oldChild.key);
 			j++;
 		} else {
-
 			let refNode = nextOldDom ? nextOldDom._dom : null;
 			parentDom.insertBefore(newChild._dom, refNode);
 
@@ -151,7 +167,7 @@ function placeChildren(newChildren, oldChildren, parentDom) {
 
 function getNextDom(oldChildren, j) {
 	let k = j;
-	let nextDom = null
+	let nextDom = null;
 	while (k < oldChildren.length && nextDom == null) {
 		nextDom = oldChildren[k];
 		k++;

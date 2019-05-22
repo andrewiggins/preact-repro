@@ -1,5 +1,6 @@
 import { startCapturingLogs, stopCapturing } from "./logCall";
 import { isEqual } from "./isEqual";
+import { createElement, coerceToVNode } from "./create-element";
 
 const sumFailedResults = array =>
 	array.reduce((sum, didSucceed) => (!didSucceed ? sum + 1 : sum), 0);
@@ -20,19 +21,24 @@ export function runTests(diffChildren) {
 	const opCountDiffs = [];
 
 	/**
-	 * @param {number[]} oldArr
-	 * @param {number[]} newArr
+	 * @param {any[]} oldArr
+	 * @param {any[]} newArr
 	 * @param {string} label
 	 * @param {number} expectedOpCount
 	 */
 	function run(oldArr, newArr, label, expectedOpCount) {
-		const [oldVNode, parentDom] = generateHtml(oldArr);
-		const newVNode = { key: parentKey, _children: newArr.map(coerceToVNode) };
+		const oldParentVNode = generateHtml(oldArr);
+		const newParentVNode = createElement(
+			oldParentVNode.type,
+			{ key: parentKey },
+			...newArr // Copy newArr to preserve the original
+		);
+		const parentDom = oldParentVNode._dom;
 
 		const original = parentDom.textContent;
 
 		startCapturingLogs();
-		diffChildren(newVNode, oldVNode, parentDom);
+		diffChildren(newParentVNode, oldParentVNode, parentDom);
 		const log = stopCapturing();
 		const domOps = log.filter(log => log[0] !== "log");
 		const actualOpCount = domOps.length;
@@ -44,8 +50,7 @@ export function runTests(diffChildren) {
 
 		if (opCountDiff !== 0 || result === false) {
 			console.group(label);
-		}
-		else {
+		} else {
 			console.groupCollapsed(label);
 		}
 
@@ -185,52 +190,29 @@ export function runTests(diffChildren) {
 }
 
 /**
- * Coerce an untrusted value into a VNode
- * Specifically, this should be used anywhere a user could provide a boolean, string, or number where
- * a VNode or Component is desired instead
- * @param {boolean | string | number | import('./internal').VNode} possibleVNode A possible VNode
- * @returns {import('./internal').VNode | null}
- */
-export function coerceToVNode(possibleVNode) {
-	if (possibleVNode == null || typeof possibleVNode === "boolean") return null;
-	if (typeof possibleVNode === "string" || typeof possibleVNode === "number") {
-		return { key: possibleVNode };
-	}
-
-	// if (Array.isArray(possibleVNode)) {
-	// 	return createElement(Fragment, null, possibleVNode);
-	// }
-
-	// // Clone vnode if it has already been used. ceviche/#57
-	// if (possibleVNode._dom!=null || possibleVNode._component!=null) {
-	// 	let vnode = createVNode(possibleVNode.type, possibleVNode.props, possibleVNode.key, null);
-	// 	vnode._dom = possibleVNode._dom;
-	// 	return vnode;
-	// }
-
-	return possibleVNode;
-}
-
-/**
  * @param {number[]} array
- * @returns {[import('./internal').VNode, Node]}
+ * @returns {import('./internal').VNode}
  */
 function generateHtml(array) {
-	let parent = document.createElement("div");
-
+	let parentDom = document.createElement("div");
 	let vnodes = [];
 	for (let i = 0; i < array.length; i++) {
 		let value = array[i];
 		if (value != null) {
 			let dom = document.createTextNode(value.toString());
+			parentDom.appendChild(dom);
 
-			parent.appendChild(dom);
-			vnodes.push({ key: value, _dom: dom });
-		}
-		else {
+			let vnode = coerceToVNode(value);
+			vnode._dom = dom;
+			vnodes.push(vnode);
+		} else {
 			vnodes.push(null);
 		}
 	}
 
-	return [{ key: parentKey, _children: vnodes }, parent];
+	const parentVNode = createElement("div", { key: parentKey }, vnodes);
+	parentVNode._children = parentVNode.props.children;
+	parentVNode._dom = parentDom;
+
+	return parentVNode;
 }
