@@ -1,16 +1,18 @@
-// import "./arrays";
 import { runTests } from "./runTest";
-import { diffChildren } from "./backward-loop";
-import { diffChildren as forwardDiffChildren } from "./forward-loop";
-import { preactDiffChildren } from "./preact";
 
 if (location.href.indexOf("preact") != -1) {
-	runTests(preactDiffChildren);
-	console.log("preact diffChildren");
+	import("./preact").then(({ preactDiffChildren }) => {
+		runTests(preactDiffChildren);
+		console.log("preact diffChildren");
+	});
 } else if (location.href.indexOf("forward") != -1) {
-	runTests(forwardDiffChildren);
-	console.log("forward diffChildren");
+	import("./forward-loop").then(({ diffChildren }) => {
+		runTests(diffChildren);
+		console.log("forward diffChildren");
+	});
 } else {
-	runTests(diffChildren);
-	console.log("backward diffChildren");
+	import("./backward-loop").then(({ diffChildren }) => {
+		runTests(diffChildren);
+		console.log("backward diffChildren");
+	});
 }

@@ -10,7 +10,8 @@ export default {
 	input: "./src/index.js",
 	output: {
 		dir: "./dist",
-		format: "iife"
+		format: "esm",
+		chunkFileNames: "[name].js" // Keep consistent names for easier debugging
 	},
 	plugins: [
 		nodeResolve(),
