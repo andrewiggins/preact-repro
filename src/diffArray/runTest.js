@@ -1,6 +1,6 @@
 import { startCapturingLogs, stopCapturing } from "./logCall";
 import { isEqual } from "./isEqual";
-import { createElement, coerceToVNode } from "./create-element";
+import { createElement, coerceToVNode, Fragment } from "./create-element";
 
 const sumFailedResults = array =>
 	array.reduce((sum, didSucceed) => (!didSucceed ? sum + 1 : sum), 0);
@@ -184,6 +184,8 @@ export function runTests(diffChildren) {
 	run([0, null, 2], [0, 1, 2], "From null placeholder middle", 1);
 	// run([0, null, 1, 2], [0, 1, 2], "Remove null", 0); // TODO: Weird edge case maybe not worth covering, though maybe unmounting null is worth it?
 
+	run([0, [1], 2], [0, 2], "Remove Fragment from middle", 1);
+
 	console.log("Correctness Failed:", sumFailedResults(correctnessResults));
 	console.log("Op Count Failed:", sumFailedDiffs(opCountDiffs));
 	console.log("Op Count Improved:", sumImprovementDiffs(opCountDiffs));
@@ -194,25 +196,44 @@ export function runTests(diffChildren) {
  * @returns {import('./internal').VNode}
  */
 function generateHtml(array) {
-	let parentDom = document.createElement("div");
-	let vnodes = [];
-	for (let i = 0; i < array.length; i++) {
-		let value = array[i];
-		if (value != null) {
-			let dom = document.createTextNode(value.toString());
-			parentDom.appendChild(dom);
+	let vnodes = array.map(toOldVNodes);
 
-			let vnode = coerceToVNode(value);
-			vnode._dom = dom;
-			vnodes.push(vnode);
-		} else {
-			vnodes.push(null);
+	let parentDom = document.createElement("div");
+	forEachDomVNode(vnodes, vnode => {
+		if (vnode != null && vnode.type == null) {
+			vnode._dom = document.createTextNode(vnode.props.toString());
+			parentDom.appendChild(vnode._dom);
 		}
-	}
+	});
 
 	const parentVNode = createElement("div", { key: parentKey }, vnodes);
 	parentVNode._children = parentVNode.props.children;
 	parentVNode._dom = parentDom;
 
 	return parentVNode;
+}
+
+const normalizeChildren = children =>
+	children == null ? [] : Array.isArray(children) ? children : [children];
+
+function toOldVNodes(possibleVNode) {
+	const vnode = coerceToVNode(possibleVNode);
+	if (vnode != null && vnode.type === Fragment) {
+		vnode._children = normalizeChildren(vnode.props.children).map(toOldVNodes);
+	}
+
+	return vnode;
+}
+
+function forEachDomVNode(possibleVNode, callback, i = 0) {
+	if (possibleVNode == null) {
+	} else if (Array.isArray(possibleVNode)) {
+		possibleVNode.forEach(child => forEachDomVNode(child, callback, i++));
+	} else if (possibleVNode.type != null && typeof possibleVNode.type != 'string') {
+		possibleVNode._children.forEach(child =>
+			forEachDomVNode(child, callback, i++)
+		);
+	} else {
+		callback(possibleVNode, i);
+	}
 }

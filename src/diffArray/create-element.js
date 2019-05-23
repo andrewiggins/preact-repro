@@ -116,8 +116,8 @@ export function coerceToVNode(possibleVNode) {
  * @param {import('./internal').VNode} vnode
  */
 export function unmount(vnode) {
-	if (Array.isArray(vnode)) {
-		vnode.forEach(unmount);
+	if (vnode.type == Fragment) {
+		vnode._children.forEach(unmount);
 	} else {
 		vnode._dom.parentNode.removeChild(vnode._dom);
 	}
