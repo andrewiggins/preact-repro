@@ -264,6 +264,7 @@ function generateHtml(array) {
 const normalizeChildren = children =>
 	children == null ? [] : Array.isArray(children) ? children : [children];
 
+/** Coerce values to VNodes and assign _children for Fragments */
 function toOldVNodes(possibleVNode) {
 	const vnode = coerceToVNode(possibleVNode);
 	if (vnode != null && vnode.type === Fragment) {
@@ -273,6 +274,11 @@ function toOldVNodes(possibleVNode) {
 	return vnode;
 }
 
+/**
+ * @param {any} possibleVNode
+ * @param {(vnode: import('./internal').VNode, i: number) => void} callback
+ * @param {number} [i]
+ */
 function forEachDomVNode(possibleVNode, callback, i = 0) {
 	if (possibleVNode == null) {
 	} else if (Array.isArray(possibleVNode)) {

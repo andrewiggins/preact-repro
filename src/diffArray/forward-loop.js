@@ -1,13 +1,16 @@
-import { unmount, coerceToVNode } from "./create-element";
+import { unmount, coerceToVNode, Fragment } from "./create-element";
 
 const EMPTY_ARR = [];
 
 /**
+ * @param {Node} parentDom
  * @param {import('./internal').VNode} oldVNode
  * @param {import('./internal').VNode} newVNode
  */
-function diff(oldVNode, newVNode) {
-	if (oldVNode) {
+function diff(parentDom, oldVNode, newVNode) {
+	if (newVNode.type == Fragment || (oldVNode && oldVNode.type == Fragment)) {
+		diffChildren(parentDom, newVNode, oldVNode);
+	} else if (oldVNode) {
 		newVNode._dom = oldVNode._dom;
 	} else if (newVNode.type == null) {
 		newVNode._dom = document.createTextNode(newVNode.props);
@@ -15,6 +18,18 @@ function diff(oldVNode, newVNode) {
 		throw new Error(`Unknown type: ${newVNode.type}`);
 	}
 }
+
+// TODO: Fragment challenges
+// * placeChildren does have access to Fragments oldChildren
+// * _oldIndex, _newIndex are in the context of the local oldChildren array,
+//	which is different from the "array" and index of `forEachDomVNode`.
+//
+//	Perhaps pass a `continuationIndex` into diffChildren when going traversing
+//	down components and Fragments
+//
+// * Unmounting doesn't see the full oldChildren array?
+//
+// Fundamentally, the diff loop and place loop are different :(
 
 /**
  * @param {Node} parentDom
@@ -44,14 +59,28 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode) {
 		if (newVNode != null) {
 			oldVNode = oldChildren[i];
 
-			if (oldVNode && oldVNode.key === newVNode.key) {
+			if (
+				oldVNode === null ||
+				(oldVNode &&
+					(oldVNode.key != null
+						? newVNode.key === oldVNode.key
+						: newVNode.key == null && newVNode.type === oldVNode.type))
+			) {
 				// oldArr[i] = undefined;
 				newVNode._oldIndex = i;
-				oldVNode._newIndex = i;
+
+				if (oldVNode) {
+					oldVNode._newIndex = i;
+				}
 			} else {
 				for (j = 0; j < oldChildren.length; j++) {
 					oldVNode = oldChildren[j];
-					if (oldVNode && newVNode.key === oldVNode.key) {
+					if (
+						oldVNode &&
+						(oldVNode.key != null
+							? newVNode.key === oldVNode.key
+							: newVNode.key == null && newVNode.type === oldVNode.type)
+					) {
 						// oldArr[j] = undefined;
 						newVNode._oldIndex = j;
 						oldVNode._newIndex = i;
@@ -61,7 +90,7 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode) {
 				}
 			}
 
-			diff(oldVNode, newVNode);
+			diff(parentDom, oldVNode, newVNode);
 		}
 
 		// if (oldChild == null) {
@@ -73,14 +102,17 @@ export function diffChildren(parentDom, newParentVNode, oldParentVNode) {
 		// }
 	}
 
-	placeChildren(parentDom, newChildren, oldChildren);
+	if (newParentVNode.type == null || typeof newParentVNode.type == 'string') {
+		placeChildren(parentDom, newChildren, oldChildren);
+	}
 
 	// Remove old nodes
 	i = oldChildren.length;
 	while (--i >= 0) {
 		// if (oldChildren[i]._newIndex == null) {
-		if (oldChildren[i] != null) {
+		if (oldChildren[i] != null && oldChildren[i]._newIndex == null) {
 			unmount(oldChildren[i]);
+			oldChildren[i] = null;
 		}
 	}
 }
@@ -95,74 +127,76 @@ function placeChildren(parentDom, newChildren, oldChildren) {
 	let i = 0;
 	let j = 0;
 	let nextOldDom = getNextDom(oldChildren, j);
-	while (i < newChildren.length) {
-		let newChild = newChildren[i];
-		let oldChild = oldChildren[j];
+	forEachDomVNode(newChildren, (newChild, i) => {
+		const originalIndex = i;
+		while (i == originalIndex) {
+			let oldChild = oldChildren[j];
 
-		oldChild = oldChild == null ? null : oldChild;
-		console.log(
-			"j",
-			j,
-			"o",
-			oldChild && oldChild.key,
-			"o._nI:",
-			oldChild && oldChild._newIndex,
-			"--",
-			"i",
-			i,
-			"n",
-			newChild && newChild.key,
-			"n._oI:",
-			newChild && newChild._oldIndex,
-			"nOD:",
-			nextOldDom && nextOldDom.key,
-			"diff:",
-			// oldChild._newIndex < newChild._oldIndex,
-			// oldChild && oldChild._newIndex - newChild._oldIndex,
-			// oldChild && oldChild._newIndex - i,
-			newChild && newChild._oldIndex - i,
-			oldChildren.length / 2
-		);
+			oldChild = oldChild == null ? null : oldChild;
+			console.log(
+				"j",
+				j,
+				"o",
+				oldChild && oldChild.key,
+				"o._nI:",
+				oldChild && oldChild._newIndex,
+				"--",
+				"i",
+				i,
+				"n",
+				newChild && newChild.key,
+				"n._oI:",
+				newChild && newChild._oldIndex,
+				"nOD:",
+				nextOldDom && nextOldDom.key,
+				"diff:",
+				// oldChild._newIndex < newChild._oldIndex,
+				// oldChild && oldChild._newIndex - newChild._oldIndex,
+				// oldChild && oldChild._newIndex - i,
+				newChild && newChild._oldIndex - i,
+				oldChildren.length / 2
+			);
 
-		if (j >= oldChildren.length) {
-			// No more old children so just insert new children
-			parentDom.appendChild(newChild._dom);
+			if (j >= oldChildren.length) {
+				// No more old children so just insert new children
+				parentDom.appendChild(newChild._dom);
 
-			i++;
-			if (newChild._oldIndex != null) {
-				oldChildren[newChild._oldIndex] = null;
-			}
-		} else if (oldChild == null) {
-			j++;
-		} else if (newChild == null) {
-			i++;
-		} else if (oldChild._newIndex == null) {
-			// Skip over old children that don't have a match in new children (they will be removed)
-			j++;
-		} else if (newChild.key == oldChild.key) {
-			j++;
-			nextOldDom = getNextDom(oldChildren, j);
+				i++;
+				if (newChild._oldIndex != null) {
+					oldChildren[newChild._oldIndex] = null;
+				}
+			} else if (oldChild == null) {
+				j++;
+			} else if (newChild == null) {
+				i++;
+			} else if (oldChild._newIndex == null) {
+				// Skip over old children that don't have a match in new children (they will be removed)
+				j++;
+			} else if (newChild.key == oldChild.key) {
+				j++;
+				nextOldDom = getNextDom(oldChildren, j);
 
-			i++;
-			if (newChild._oldIndex != null) {
-				oldChildren[newChild._oldIndex] = null;
-			}
-		} else if (
-			newChild._oldIndex - i > 0 &&
-			newChild._oldIndex - i < oldChildren.length / 2
-		) {
-			console.log("skipping", oldChild.key);
-			j++;
-		} else {
-			let refNode = nextOldDom ? nextOldDom._dom : null;
-			parentDom.insertBefore(newChild._dom, refNode);
+				i++;
+				if (newChild._oldIndex != null) {
+					oldChildren[newChild._oldIndex] = null;
+				}
+			} else if (
+				newChild._oldIndex - i > 0 &&
+				newChild._oldIndex - i < oldChildren.length / 2
+			) {
+				console.log("skipping", oldChild.key);
+				j++;
+			} else {
+				let refNode = nextOldDom ? nextOldDom._dom : null;
+				parentDom.insertBefore(newChild._dom, refNode);
 
-			i++;
-			if (newChild._oldIndex != null) {
-				oldChildren[newChild._oldIndex] = null;
+				i++;
+				if (newChild._oldIndex != null) {
+					oldChildren[newChild._oldIndex] = null;
+				}
 			}
 		}
-	}
+	});
 }
 
 function getNextDom(oldChildren, j) {
@@ -173,4 +207,25 @@ function getNextDom(oldChildren, j) {
 		k++;
 	}
 	return nextDom;
+}
+
+/**
+ * @param {any} possibleVNode
+ * @param {(vnode: import('./internal').VNode, i: number) => void} callback
+ * @param {number} [i]
+ */
+function forEachDomVNode(possibleVNode, callback, i = 0) {
+	if (possibleVNode == null) {
+	} else if (Array.isArray(possibleVNode)) {
+		possibleVNode.forEach(child => forEachDomVNode(child, callback, i++));
+	} else if (
+		possibleVNode.type != null &&
+		typeof possibleVNode.type != "string"
+	) {
+		possibleVNode._children.forEach(child =>
+			forEachDomVNode(child, callback, i++)
+		);
+	} else {
+		callback(possibleVNode, i);
+	}
 }
