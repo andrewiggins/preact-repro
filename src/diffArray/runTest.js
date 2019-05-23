@@ -27,11 +27,13 @@ export function runTests(diffChildren) {
 	 * @param {number} expectedOpCount
 	 */
 	function run(oldArr, newArr, label, expectedOpCount) {
+		const expected = newArr.flat().join("");
+
 		const oldParentVNode = generateHtml(oldArr);
 		const newParentVNode = createElement(
 			oldParentVNode.type,
 			{ key: parentKey },
-			...newArr // Copy newArr to preserve the original
+			newArr
 		);
 		const parentDom = oldParentVNode._dom;
 
@@ -44,7 +46,6 @@ export function runTests(diffChildren) {
 		const actualOpCount = domOps.length;
 
 		const actual = parentDom.textContent;
-		const expected = newArr.join("");
 		const result = isEqual(actual, expected);
 		const opCountDiff = actualOpCount - expectedOpCount;
 
@@ -184,7 +185,54 @@ export function runTests(diffChildren) {
 	run([0, null, 2], [0, 1, 2], "From null placeholder middle", 1);
 	// run([0, null, 1, 2], [0, 1, 2], "Remove null", 0); // TODO: Weird edge case maybe not worth covering, though maybe unmounting null is worth it?
 
-	run([0, [1], 2], [0, 2], "Remove Fragment from middle", 1);
+	run([0, 1], [0, 1, [2, 3]], "Append Fragment", 2);
+	run([0, 1, [2, 3]], [0, 1], "Pop Fragment", 2);
+
+	run([2, 3], [[0, 1], 2, 3], "Prepend Fragment", 2);
+	run([[0, 1], 2, 3], [2, 3], "Remove Fragment from beginning", 2);
+
+	run([0, 3], [0, [1, 2], 3], "Insert Fragment in middle", 2);
+	run([0, [1, 2], 3], [0, 3], "Remove Fragment from middle", 2);
+
+	run([[0, 1], 2, 3], [2, 3, [0, 1]], "Move Fragment to end", 2);
+	run([2, 3, [0, 1]], [[0, 1], 2, 3], "Move Fragment to beginning", 2);
+
+	run([0, [1, 2], 4], [0, [1, 2, 3], 4], "Inside Fragment: Append", 1);
+	run([0, [1, 2, 3], 4], [0, [1, 2], 4], "Inside Fragment: Pop", 1);
+
+	run([0, [2, 3], 4], [0, [1, 2, 3], 4], "Inside Fragment: Prepend", 1);
+	run(
+		[0, [1, 2, 3], 4],
+		[0, [2, 3], 4],
+		"Inside Fragment: Remove from beginning",
+		1
+	);
+
+	run(
+		[0, [1, 3], 4],
+		[0, [1, 2, 3], 4],
+		"Inside Fragment: Insert in middle",
+		1
+	);
+	run(
+		[0, [1, 2, 3], 4],
+		[0, [1, 3], 4],
+		"Inside Fragment: Remove from middle",
+		1
+	);
+
+	run(
+		[0, [1, 2, 3, 4], 5],
+		[0, [2, 3, 4, 1], 5],
+		"Inside Fragment: Move to end",
+		1
+	);
+	run(
+		[0, [2, 3, 4, 1], 5],
+		[0, [1, 2, 3, 4], 5],
+		"Inside Fragment: Move to beginning",
+		1
+	);
 
 	console.log("Correctness Failed:", sumFailedResults(correctnessResults));
 	console.log("Op Count Failed:", sumFailedDiffs(opCountDiffs));
@@ -229,7 +277,10 @@ function forEachDomVNode(possibleVNode, callback, i = 0) {
 	if (possibleVNode == null) {
 	} else if (Array.isArray(possibleVNode)) {
 		possibleVNode.forEach(child => forEachDomVNode(child, callback, i++));
-	} else if (possibleVNode.type != null && typeof possibleVNode.type != 'string') {
+	} else if (
+		possibleVNode.type != null &&
+		typeof possibleVNode.type != "string"
+	) {
 		possibleVNode._children.forEach(child =>
 			forEachDomVNode(child, callback, i++)
 		);

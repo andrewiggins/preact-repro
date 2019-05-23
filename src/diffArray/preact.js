@@ -1,4 +1,4 @@
-import { coerceToVNode, unmount } from "./create-element";
+import { coerceToVNode, unmount, Fragment } from "./create-element";
 
 const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
@@ -10,7 +10,26 @@ const EMPTY_OBJ = {};
  * @param {Node} oldDom
  */
 function diff(parentDom, newVNode, oldVNode, oldDom) {
-	if (oldVNode) {
+	let tmp;
+
+	if (newVNode.type == Fragment || (oldVNode && oldVNode.type == Fragment)) {
+		diffChildren(parentDom, newVNode, oldVNode, oldDom);
+
+		let i = newVNode._children.length;
+		if (i && (tmp = newVNode._children[0]) != null) {
+			newVNode._dom = tmp._dom;
+
+			// If the last child is a Fragment, use _lastDomChild, else use _dom
+			// We have no guarantee that the last child rendered something into the
+			// dom, so we iterate backwards to find the last child with a dom node.
+			while (i--) {
+				tmp = newVNode._children[i];
+				if ((newVNode._lastDomChild = tmp && (tmp._lastDomChild || tmp._dom))) {
+					break;
+				}
+			}
+		}
+	} else if (oldVNode) {
 		newVNode._dom = oldVNode._dom;
 	} else if (newVNode.type == null) {
 		newVNode._dom = document.createTextNode(newVNode.props);
@@ -32,7 +51,7 @@ function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 	let newVNode, i, j, oldVNode, newDom, sibDom;
 
 	// let newChildren = newParentVNode._children || toChildArray(newParentVNode.props.children, newParentVNode._children=[], coerceToVNode);
-	const newChildren =
+	let newChildren =
 		newParentVNode._children ||
 		(newParentVNode._children =
 			newParentVNode.props.children == null
