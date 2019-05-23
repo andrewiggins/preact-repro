@@ -164,5 +164,6 @@ function diffChildren(parentDom, newParentVNode, oldParentVNode, oldDom) {
 		if (oldChildren[i] != null) unmount(oldChildren[i]);
 }
 
-export const preactDiffChildren = (newVNode, oldVNode, parentDom) =>
+/** @type {(parentDom: Node, newVNode: import('./internal').VNode, oldVNode: import('./internal').VNode) => void} */
+export const preactDiffChildren = (parentDom, newVNode, oldVNode) =>
 	diffChildren(parentDom, newVNode, oldVNode, EMPTY_OBJ);

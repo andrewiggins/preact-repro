@@ -14,7 +14,7 @@ const sumImprovementDiffs = array =>
 const parentKey = "parent";
 
 /**
- * @param {(newVNode: import('./internal').VNode, oldVNode: import('./internal').VNode, parentDom: Node) => void} diffChildren
+ * @param {(parentDom: Node, newVNode: import('./internal').VNode, oldVNode: import('./internal').VNode) => void} diffChildren
  */
 export function runTests(diffChildren) {
 	const correctnessResults = [];
@@ -40,7 +40,7 @@ export function runTests(diffChildren) {
 		const original = parentDom.textContent;
 
 		startCapturingLogs();
-		diffChildren(newParentVNode, oldParentVNode, parentDom);
+		diffChildren(parentDom, newParentVNode, oldParentVNode);
 		const log = stopCapturing();
 		const domOps = log.filter(log => log[0] !== "log");
 		const actualOpCount = domOps.length;

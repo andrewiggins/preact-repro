@@ -17,11 +17,11 @@ function diff(oldVNode, newVNode) {
 }
 
 /**
+ * @param {Node} parentDom
  * @param {import('./internal').VNode} newParentVNode
  * @param {import('./internal').VNode} oldParentVNode
- * @param {Node} parentDom
  */
-export function diffChildren(newParentVNode, oldParentVNode, parentDom) {
+export function diffChildren(parentDom, newParentVNode, oldParentVNode) {
 	// algorithm assumes oldArr matches result
 
 	const newChildren =
@@ -73,7 +73,7 @@ export function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 		// }
 	}
 
-	placeChildren(newChildren, oldChildren, parentDom);
+	placeChildren(parentDom, newChildren, oldChildren);
 
 	// Remove old nodes
 	i = oldChildren.length;
@@ -86,11 +86,11 @@ export function diffChildren(newParentVNode, oldParentVNode, parentDom) {
 }
 
 /**
+ * @param {Node} parentDom
  * @param {import('./internal').VNode[]} newChildren
  * @param {import('./internal').VNode[]} oldChildren
- * @param {Node} parentDom
  */
-function placeChildren(newChildren, oldChildren, parentDom) {
+function placeChildren(parentDom, newChildren, oldChildren) {
 	// Insert new nodes
 	let i = newChildren.length - 1;
 	let j = oldChildren.length - 1;
