@@ -34,8 +34,9 @@ export default {
 		commonjs(),
 		alias({
 			entries: {
-				"preact/hooks": p("lib/preact/hooks.js"),
-				preact: p("lib/preact/index.js"),
+				"preact/compat": p("lib/preact-latest/compat.js"),
+				"preact/hooks": p("lib/preact-latest/hooks.js"),
+				preact: p("lib/preact-latest/index.js"),
 			},
 		}),
 	],
